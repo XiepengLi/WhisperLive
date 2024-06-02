@@ -681,7 +681,7 @@ class ServeClientTensorRT(ServeClientBase):
 
 
 class ServeClientFasterWhisper(ServeClientBase):
-    def __init__(self, websocket, task="transcribe", device=None, language=None, client_uid=None, model="small.en",
+    def __init__(self, websocket, task="transcribe", device=None, language=None, client_uid=None, model="distil-large-v3",
                  initial_prompt=None, vad_parameters=None, use_vad=True):
         """
         Initialize a ServeClient instance.
@@ -701,7 +701,7 @@ class ServeClientFasterWhisper(ServeClientBase):
         super().__init__(client_uid, websocket)
         self.model_sizes = [
             "tiny", "tiny.en", "base", "base.en", "small", "small.en",
-            "medium", "medium.en", "large-v2", "large-v3",
+            "medium", "medium.en", "large-v2", "large-v3", "distil-large-v3"
         ]
         if not os.path.exists(model):
             self.model_size_or_path = self.check_valid_model(model)
@@ -718,12 +718,20 @@ class ServeClientFasterWhisper(ServeClientBase):
         if self.model_size_or_path is None:
             return
 
-        self.transcriber = WhisperModel(
-            self.model_size_or_path,
-            device=device,
-            compute_type="int8" if device == "cpu" else "float16",
-            local_files_only=False,
-        )
+        try:
+            self.transcriber = WhisperModel(
+                self.model_size_or_path,
+                device=device,
+                compute_type="int8" if device == "cpu" else "float16",
+                local_files_only=False,
+            )
+        except:
+            self.transcriber = WhisperModel(
+                self.model_size_or_path,
+                device=device,
+                compute_type="int8" if device == "cpu" else "float32",
+                local_files_only=False,
+            )
         self.use_vad = use_vad
 
         # threading

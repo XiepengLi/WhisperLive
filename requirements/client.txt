@@ -1,3 +1,4 @@
+fastapi
 PyAudio
 ffmpeg-python
 scipy

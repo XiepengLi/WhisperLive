@@ -1,0 +1,57 @@
+version: '3.8'
+services:
+
+  # whisperlive-client:
+  #   build:
+  #     context: .
+  #     dockerfile: ./docker/Dockerfile.client
+  #   tty: true
+  #   networks:
+  #     - whisperlive-network
+  #   depends_on:
+  #     - whisperlive-gpu
+  #   environment:
+  #     - PULSE_SERVER=/mnt/wslg/PulseServer
+  #   ports:
+  #     - "8000:8000"
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock # 如果需要访问Docker守护进程
+  #     - /mnt/wslg/:/mnt/wslg/
+
+  whisperlive-gpu:
+    # image: ghcr.io/collabora/whisperlive-gpu:latest
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.gpu_ext
+    # 如果需要传递构建参数，可以使用以下方式：
+    # build:
+    #   context: .
+    #   args:
+    #     SOME_ARG: some_value
+    # command: ["/bin/bash"] # 假设你希望在容器内启动一个交互式bash shell
+    tty: true
+    networks:
+      - whisperlive-network
+    environment:
+      - OMP_NUM_THREADS=4
+      - NVIDIA_VISIBLE_DEVICES=all
+      - HUGGINGFACE_HUB_CACHE=/app/model/
+      - TRANSFORMERS_CACHE=/app/model/
+      - HF_HOME=/app/model/
+    ports:
+      - "9090:9090"
+    deploy:
+      mode: global
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock # 如果需要访问Docker守护进程
+      - /e/huggingface/hub:/app/model/
+
+networks:
+  whisperlive-network:
+    driver: bridge

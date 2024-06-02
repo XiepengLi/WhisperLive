@@ -1,0 +1,23 @@
+FROM ghcr.io/collabora/whisperlive-gpu:latest
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# install lib required for pyaudio
+RUN apt update && apt install -y libsdl2-dev
+
+# update pip to support for whl.metadata -> less downloading
+# RUN pip install --no-cache-dir -U "pip>=24"
+
+# create a working directory
+RUN mkdir -p /app
+WORKDIR /app
+
+# install the requirements for running the whisper-live server
+COPY requirements/client.txt /app/
+RUN pip install --no-cache-dir -r client.txt && rm client.txt
+
+
+COPY whisper_live /app/whisper_live
+COPY event_api.py /app
+
+CMD ["python", "event_api.py"]
