@@ -12,33 +12,6 @@ import time
 import ffmpeg
 import whisper_live.utils as utils
 
-import datetime
-
-
-def whisper_eager_generator(client):
-    time.sleep(0.01)
-    data = [
-        {
-            "message": client.last_segments[-1],
-            "timestamp": datetime.datetime.now().isoformat(),
-        }
-    ]
-
-    for item in data:
-        yield f"data: {item}\n\n"
-
-
-def whisper_full_generator(client):
-    time.sleep(0.1)
-    data = [
-        {
-            "message": client.stable_segments[-1],
-            "timestamp": datetime.datetime.now().isoformat(),
-        }
-    ]
-    for item in data:
-        yield f"data: {item}\n\n"
-
 
 class Client:
     """

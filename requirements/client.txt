@@ -1,5 +1,5 @@
 fastapi
-PyAudio
+PyAudio #  conda install -y pyaudio
 ffmpeg-python
 scipy
 websocket-client

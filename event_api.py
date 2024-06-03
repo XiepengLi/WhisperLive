@@ -1,4 +1,5 @@
-from whisper_live.client import TranscriptionClient, whisper_eager_generator, whisper_full_generator
+from whisper_live.client import TranscriptionClient
+import datetime
 
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
@@ -7,7 +8,7 @@ import threading
 app = FastAPI()
 
 client = TranscriptionClient(
-    "whisperlive-gpu",
+    "127.0.0.1",
     9090,
     lang="en",
     translate=False,
@@ -18,17 +19,42 @@ client = TranscriptionClient(
 )
 
 
-@app.get("/whisper_eager_stream")
-def whisper_eager_stream():
+def last_segment(client):
+    time.sleep(0.01)
+    data = [
+        {
+            "message": client.last_segments[-1],
+            "timestamp": datetime.datetime.now().isoformat(),
+        }
+    ]
+
+    for item in data:
+        yield item
+
+
+def last_stable_segment(client):
+    time.sleep(0.1)
+    data = [
+        {
+            "message": client.stable_segments[-1],
+            "timestamp": datetime.datetime.now().isoformat(),
+        }
+    ]
+    for item in data:
+        yield item
+
+
+@app.get("/last_segment")
+def last_segment_stream():
     return StreamingResponse(
-        whisper_eager_generator(client.client), media_type="text/event-stream"
+        last_segment(client.client), media_type="text/event-stream"
     )
 
 
-@app.get("/whisper_full_stream")
-def whisper_full_stream():
+@app.get("/last_stable_segment")
+def last_stable_segment_stream():
     return StreamingResponse(
-        whisper_full_generator(client.client), media_type="text/event-stream"
+        last_stable_segment(client.client), media_type="text/event-stream"
     )
 
 
@@ -40,4 +66,4 @@ if __name__ == "__main__":
     record_thread.daemon = True
     record_thread.start()
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)
